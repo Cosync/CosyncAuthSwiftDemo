@@ -20,13 +20,13 @@
 		0850D48D2B1666A1000A6439 /* PasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0850D4882B1666A1000A6439 /* PasswordView.swift */; };
 		0850D48E2B1666A1000A6439 /* LoginCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0850D4892B1666A1000A6439 /* LoginCompleteView.swift */; };
 		0850D48F2B1666A1000A6439 /* LoggedInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0850D48A2B1666A1000A6439 /* LoggedInView.swift */; };
-		0850D4932B1666AC000A6439 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 0850D4902B1666AC000A6439 /* README.md */; };
 		0850D4942B1666AC000A6439 /* UserManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0850D4912B1666AC000A6439 /* UserManager.swift */; };
 		0850D4952B1666AC000A6439 /* RealmManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0850D4922B1666AC000A6439 /* RealmManager.swift */; };
 		0850D49D2B166860000A6439 /* AlertExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0850D49C2B166860000A6439 /* AlertExtension.swift */; };
 		0850D49F2B166868000A6439 /* StringExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0850D49E2B166868000A6439 /* StringExtension.swift */; };
 		0850D4A22B166AE0000A6439 /* CosyncAuthSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 0850D4A12B166AE0000A6439 /* CosyncAuthSwift */; };
 		0850D4A42B166AE0000A6439 /* CosyncGoogleAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 0850D4A32B166AE0000A6439 /* CosyncGoogleAuth */; };
+		0850D4B02B17E00D000A6439 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 0850D4AF2B17E00D000A6439 /* README.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,11 +43,11 @@
 		0850D4882B1666A1000A6439 /* PasswordView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasswordView.swift; sourceTree = "<group>"; };
 		0850D4892B1666A1000A6439 /* LoginCompleteView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginCompleteView.swift; sourceTree = "<group>"; };
 		0850D48A2B1666A1000A6439 /* LoggedInView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoggedInView.swift; sourceTree = "<group>"; };
-		0850D4902B1666AC000A6439 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		0850D4912B1666AC000A6439 /* UserManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserManager.swift; sourceTree = "<group>"; };
 		0850D4922B1666AC000A6439 /* RealmManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RealmManager.swift; sourceTree = "<group>"; };
 		0850D49C2B166860000A6439 /* AlertExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AlertExtension.swift; sourceTree = "<group>"; };
 		0850D49E2B166868000A6439 /* StringExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StringExtension.swift; sourceTree = "<group>"; };
+		0850D4AF2B17E00D000A6439 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,7 +84,7 @@
 		0850D4662B1662C2000A6439 /* CosyncAuthSwiftDemo */ = {
 			isa = PBXGroup;
 			children = (
-				0850D4902B1666AC000A6439 /* README.md */,
+				0850D4AF2B17E00D000A6439 /* README.md */,
 				0850D4842B166692000A6439 /* Constants.swift */,
 				0850D49E2B166868000A6439 /* StringExtension.swift */,
 				0850D49C2B166860000A6439 /* AlertExtension.swift */,
@@ -181,8 +181,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0850D4B02B17E00D000A6439 /* README.md in Resources */,
 				0850D4702B1662C4000A6439 /* Preview Assets.xcassets in Resources */,
-				0850D4932B1666AC000A6439 /* README.md in Resources */,
 				0850D46C2B1662C4000A6439 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
