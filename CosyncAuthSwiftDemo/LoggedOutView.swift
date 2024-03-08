@@ -25,6 +25,9 @@
 
 import SwiftUI
 import CosyncAuthSwift
+import CosyncGoogleAuth
+import AuthenticationServices
+import GoogleSignInSwift
 
 struct LoggedOutView: View {
     var body: some View {
@@ -49,11 +52,20 @@ struct LoginTab: View {
     @State private var message: AlertMessage? = nil
     @State var isLoggingIn = false
     
+    @State private var idToken = ""
+    @State private var provider = ""
+    @State private var errorMessage = ""
+    @State private var socialLogin: Bool = true
+    @State private var isGoogleLogin: Bool = true
+    @State private var isAppleLogin: Bool = true
+    @StateObject var cosyncGoogleAuth: CosyncGoogleAuth = CosyncGoogleAuth(googleClientID: Constants.GOOGLE_CLIENT_ID)
+    
     func showLoginInvalidParameters(){
         self.message = AlertMessage(title: "Login Failed", message: "You have entered an invalid handle or password.", target: .none, state: self.appState)
     }
 
     func showLoginError(message: String){
+        self.appState.loading = false
         self.message = AlertMessage(title: "Login Failed", message: message, target: .none, state: self.appState)
     }
 
@@ -61,7 +73,7 @@ struct LoginTab: View {
     var body: some View {
         VStack(spacing: 20) {
             
-            Text("CosyncJWT iOS")
+            Text("CosyncAuth iOS")
                 .font(.largeTitle)
             
             Divider()
@@ -124,14 +136,231 @@ struct LoginTab: View {
             }
             .padding()
             
-            
-          
-            
+            if socialLogin {
+                VStack (spacing: 10){
+                    Text("Or").font(.caption)
+                        .foregroundColor(.blue)
+                    
+                    if isGoogleLogin == true {
+                        GoogleSignInButton( scheme: GoogleSignInButtonColorScheme.light,
+                                            style: GoogleSignInButtonStyle.wide,
+                                            action: handleGoogleSignInButton)
+                        .frame(minWidth: 150, maxWidth: 200, minHeight:50 , maxHeight: 70)
+                        
+                    }
+                    
+                    if isAppleLogin == true {
+                        SignInWithAppleButton(.signIn,              //1 .signin, or .continue or .signUp for button label
+                                              onRequest: { (request) in             //2
+                            //Set up request
+                            request.requestedScopes = [.fullName, .email]
+                        },
+                        onCompletion: { result in
+                            switch result {
+                            case .success(let authResults):
+                                handleAppleSignInButton(authorization:authResults)
+                            case .failure(let error):
+                                print("Authorisation failed: \(error.localizedDescription)")
+                                self.showLoginError(message: error.localizedDescription)
+                            }
+                        })
+                        .signInWithAppleButtonStyle(.whiteOutline) // .black, .white and .whiteOutline
+                        .frame(minWidth: 150, maxWidth: 200, minHeight:50, maxHeight:50)
+                        
+                        if errorMessage != "" {
+                            Text("\(errorMessage)").font(.caption)
+                                .foregroundColor(.red)
+                        }
+                        
+                    }
+                    
+                }
+             
+               
+            }
 
         }
         .font(.title)
         .alert(item: $message) { message in
             Alert(message)
+        }
+        .onAppear{
+            Task{
+                try await CosyncAuthRest.shared.getApplication()
+                
+                print("appleLoginEnabled: \( CosyncAuthRest.shared.appleLoginEnabled ?? false)")
+                
+                print("googleLoginEnabled: \(CosyncAuthRest.shared.googleLoginEnabled ?? false)")
+                
+                if CosyncAuthRest.shared.appleLoginEnabled == true || CosyncAuthRest.shared.googleLoginEnabled == true {
+                    socialLogin = true
+                    isAppleLogin = CosyncAuthRest.shared.appleLoginEnabled ?? false
+                    isGoogleLogin = CosyncAuthRest.shared.googleLoginEnabled ?? false
+                }
+                else {
+                    socialLogin = false
+                }
+            }
+        }
+        .onChange(of: cosyncGoogleAuth.idToken) { _,token in
+            if token == "" {return}
+            
+            print("googleAuth User: \(cosyncGoogleAuth.givenName) \(cosyncGoogleAuth.familyName)")
+            print("googleAuth idToken: \(token)")
+           
+            self.googleLogin(token: token)
+            
+        }
+        .onChange(of: cosyncGoogleAuth.errorMessage) { _, message in
+            if message == "" {return}
+            print("cosyncGoogleAuth message: \(message)")
+            self.showLoginError(message: message)
+            
+        }
+    }
+    
+    func handleGoogleSignInButton() {
+        self.errorMessage = ""
+        self.appState.loading = true
+        cosyncGoogleAuth.signIn()
+    }
+    
+    
+    func handleAppleSignInButton(authorization: ASAuthorization) {
+        
+        self.errorMessage = ""
+        
+        //Handle authorization
+        guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
+        let identityToken = appleIDCredential.identityToken,
+        let idToken = String(data: identityToken, encoding: .utf8)
+        else {
+            print("error");
+            self.showLoginError(message: "Apple Login Fails")
+            return
+        }
+       
+        self.appState.loading = true
+        
+        print("Apple token \(idToken)")
+        
+        self.idToken = idToken
+        self.email = appleIDCredential.email ?? ""
+        self.provider = "apple"
+  
+        // already login before
+        Task { @MainActor in
+            do {
+                try await UserManager.shared.socialLogin(token: self.idToken, provider: provider)
+                self.appState.loading = false
+                
+                if CosyncAuthRest.shared.userNamesEnabled == true && CosyncAuthRest.shared.userName == "" || CosyncAuthRest.shared.userName == nil {
+                    self.appState.target = .loginUserName
+                }
+                else {
+                    self.appState.target = .loggedIn
+                }
+             
+            } catch let error as CosyncAuthError {
+                self.appState.loading = false
+                
+                if error == .accountDoesNotExist {
+                    
+                    if let name = appleIDCredential.fullName,
+                        let givenName = name.givenName,
+                        let familyName =  name.familyName {
+                        // new account
+                        signupSocialAccount(token: self.idToken, email: self.email, firstName: givenName, lastName: familyName)
+                        
+                    }
+                    else{
+                        errorMessage = "Please remove this Demo App in 'Sign with Apple' from your icloud setting and try again."
+                        self.showLoginError(message: errorMessage)
+                    }
+                }
+                else {
+                    let message = error.message
+                    self.showLoginError(message: message)
+                }
+            } catch {
+                self.showLoginInvalidParameters()
+                self.appState.loading = false
+            }
+            
+        }
+    
+      
+    }
+    
+   
+    func signupSocialAccount(token:String, email:String, firstName:String, lastName:String)  {
+        
+        Task {
+            do {
+                
+                self.appState.loading = true
+                
+                let metaData = "{\"user_data\": {\"name\": {\"first\": \"\(firstName)\", \"last\": \"\(lastName)\"}}}"
+                try await UserManager.shared.socialSignup(token:token, email:email, provider: self.provider, metaData: metaData)
+                
+                
+                if CosyncAuthRest.shared.userNamesEnabled! && CosyncAuthRest.shared.userName == "" || CosyncAuthRest.shared.userName == nil {
+                    self.appState.target = .loginUserName
+                }
+                else {
+                    self.appState.target = .loggedIn
+                }
+                
+                self.appState.loading = false
+                
+            } catch let error as CosyncAuthError {
+                self.appState.loading = false
+                let message = error.message
+                print("signupSocialAccount error \(message)")
+                self.showLoginError(message: message)
+                
+            } catch {
+                self.appState.loading = false
+                let message = error.localizedDescription as String
+
+                print("signupSocialAccount error \(message)")
+                self.showLoginError(message: message)
+           
+            }
+            
+        }
+        
+    }
+     
+    
+    func googleLogin(token:String){
+        
+        Task { @MainActor in
+            do{
+                self.provider = "google"
+                try await UserManager.shared.socialLogin(token: token, provider: provider)
+                self.appState.loading = false
+                
+                if CosyncAuthRest.shared.userNamesEnabled == true && (CosyncAuthRest.shared.userName == "" || CosyncAuthRest.shared.userName == nil) {
+                    self.appState.target = .loginUserName
+                }
+                else {
+                    self.appState.target = .loggedIn
+                }
+            }
+            catch let error as CosyncAuthError {
+                self.appState.loading = false
+                if error == .accountDoesNotExist {
+                    self.signupSocialAccount(token: token, email: cosyncGoogleAuth.email, firstName: cosyncGoogleAuth.givenName, lastName: cosyncGoogleAuth.familyName)
+                }
+                else {
+                    
+                    self.showLoginError(message: error.message)
+                    
+                     
+                }
+            }
+            
         }
     }
     
@@ -141,14 +370,19 @@ struct LoginTab: View {
             
             do {
                 try await UserManager.shared.login(email: self.email, password: self.password)
+                
                 if let _ = CosyncAuthRest.shared.loginToken {
                     self.appState.target = .loginComplete
+                    
                 } else if UserManager.shared.shouldSetUserName() {
+                    
                     print(CosyncAuthRest.shared.accessToken!)
                     self.appState.target = .loginUserName
+                    
                 } else {
                     self.appState.target = .loggedIn
                 }
+                
             } catch {
                 isLoggingIn = false
                 self.showLoginInvalidParameters()
@@ -206,7 +440,7 @@ struct SignupTab: View {
     var body: some View {
         VStack(spacing: 20) {
             
-            Text("CosyncJWT iOS")
+            Text("CosyncAuth iOS")
                 .font(.largeTitle)
             
             Divider()

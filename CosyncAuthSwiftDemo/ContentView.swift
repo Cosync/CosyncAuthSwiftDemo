@@ -37,25 +37,39 @@ struct ContentView: View {
     }
 
     var body: some View {
-
-        Group {
-            if self.appState.target == .loggedOut {
-                LoggedOutView()
-            } else if self.appState.target == .loggedIn {
-                LoggedInView()
-            } else if self.appState.target == .loginComplete {
-                LoginCompleteView()
-            } else if self.appState.target == .loginUserName {
-                LoginUserNameView()
-            } else {
-                PasswordView()
+        ZStack{
+            Group {
+                if self.appState.target == .loggedOut {
+                    LoggedOutView()
+                } else if self.appState.target == .loggedIn {
+                    LoggedInView()
+                } else if self.appState.target == .loginComplete {
+                    LoginCompleteView()
+                } else if self.appState.target == .loginUserName {
+                    LoginUserNameView()
+                } else {
+                    PasswordView()
+                }
             }
-        }
-        .task {
-            try! await CosyncAuthRest.shared.getApplication()
-            if let anonymousLoginEnabled = CosyncAuthRest.shared.anonymousLoginEnabled {
-                appState.anonymousLoginEnabled = anonymousLoginEnabled
+            .task {
+                try! await CosyncAuthRest.shared.getApplication()
+                if let anonymousLoginEnabled = CosyncAuthRest.shared.anonymousLoginEnabled {
+                    appState.anonymousLoginEnabled = anonymousLoginEnabled
+                }
             }
+            
+            if(self.appState.loading){
+                ZStack{
+                    Color.blue.opacity(0.7)
+                        .frame(width: 80, height: 80)
+                        .cornerRadius(10)
+                    
+                    ProgressView()
+                        .frame(width: 50, height: 50)
+                        .foregroundColor(.blue)
+                }
+            }
+            
         }
     }
 }

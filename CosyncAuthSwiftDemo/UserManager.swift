@@ -68,9 +68,9 @@ class UserManager {
         
         if  CosyncAuthRest.shared.loginToken == nil,
             let jwt = CosyncAuthRest.shared.jwt {
-            
-            try await RealmManager.shared.login(jwt)
             try await UserManager.shared.loginGetUserData()
+            try await RealmManager.shared.login(jwt)
+            
         }
     }
     
@@ -82,9 +82,10 @@ class UserManager {
         if  CosyncAuthRest.shared.loginToken == nil,
             let jwt = CosyncAuthRest.shared.jwt {
             
-            print(jwt)
-            try await RealmManager.shared.login(jwt)
+            print("loginAnonymous \(jwt)")
+            
             try await UserManager.shared.loginGetUserData()
+            try await RealmManager.shared.login(jwt)
         }
     }
     
@@ -93,8 +94,9 @@ class UserManager {
         try await CosyncAuthRest.shared.loginComplete(code)
         if  let jwt = CosyncAuthRest.shared.jwt {
             
-            try await RealmManager.shared.login(jwt)
             try await UserManager.shared.loginGetUserData()
+            try await RealmManager.shared.login(jwt)
+            
         }
     }
     
@@ -132,6 +134,34 @@ class UserManager {
             }
         }
         return retval
+    }
+    
+    
+    @MainActor
+    func socialLogin(token: String, provider:String) async throws -> Void {
+        
+
+        try await CosyncAuthRest.shared.socialLogin(token, provider:provider)
+        
+        if  CosyncAuthRest.shared.loginToken == nil,
+            let jwt = CosyncAuthRest.shared.jwt {
+            try await UserManager.shared.loginGetUserData()
+            try await RealmManager.shared.login(jwt)
+            print("socialLogin accessToken \(CosyncAuthRest.shared.accessToken!)")
+        }
+    }
+    
+    @MainActor
+    func socialSignup(token:String, email:String, provider:String, metaData:String) async throws -> Void  {
+        
+        try await CosyncAuthRest.shared.socialSignup(token, email:email, provider: provider, metaData: metaData)
+        if let jwt = CosyncAuthRest.shared.jwt {
+           
+            try await UserManager.shared.loginGetUserData()
+            try await RealmManager.shared.login(jwt)
+            print("socialSignup accessToken \(CosyncAuthRest.shared.accessToken!)")
+        }
+         
     }
     
 }

@@ -48,5 +48,6 @@ struct AlertMessage: Identifiable {
 class AppState: ObservableObject {
     @Published var target: TargetUI = .loggedOut
     @Published var anonymousLoginEnabled: Bool = false
+    @Published var loading = false
     var context: Any = ""
 }
