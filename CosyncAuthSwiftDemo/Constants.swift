@@ -27,8 +27,10 @@ import Foundation
 
 struct Constants {
     
+    
     static let REALM_APP_ID = "" // <- update this with your Realm App ID
     static let APP_TOKEN = "" // <- update this
     static let COSYNC_REST_ADDRESS = "https://sandbox.cosync.net"
     static let RAW_PUBLIC_KEY = ""
+    static let GOOGLE_CLIENT_ID = ""
 }

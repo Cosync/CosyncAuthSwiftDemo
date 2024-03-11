@@ -52,7 +52,7 @@ struct LoginUserNameView: View {
                 TextField("User Name", text: $userName)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .disableAutocorrection(true)
-                    .keyboardType(.numberPad)
+                    .keyboardType(.default)
                     .autocapitalization(UITextAutocapitalizationType.none)
                     .padding()
                 
